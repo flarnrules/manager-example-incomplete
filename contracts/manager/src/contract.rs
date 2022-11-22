@@ -126,7 +126,19 @@ pub fn instantiate_new_counter(
 
 
 pub fn try_increment(deps: DepsMut, contract: String) -> Result<Response, ContractError> {
-    unimplemented!()
+    if CONTRACTS.has(deps.storage, (&MAP_KEY, &contract)) == false {
+        return Err(ContractError::NotFound {});
+    }
+
+   let execute_message = WasmMsg::Execute {
+        contract_addr: contract,
+        funds: vec![],
+        msg: to_binary(&counter::msg::ExecuteMsg::Increment { })?,
+    };
+
+    let submessage:SubMsg<Empty> = SubMsg::reply_on_success(execute_message, EXECUTE_INCREMENT_REPLY_ID);
+    
+    Ok(Response::new().add_submessage(submessage))
 }
 
 pub fn try_reset(
